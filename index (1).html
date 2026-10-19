@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Trip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3f7;--card:#fff;--tx:#10202f;--mu:#5d6b7a;--ac:#0b7f86;--hi:#f2b632;--bd:#d5dee6;--in:#f6f9fb}
+@media(prefers-color-scheme:dark){:root{--bg:#0c1620;--card:#142230;--tx:#e8eef4;--mu:#93a3b3;--ac:#3cc4c9;--hi:#f2b632;--bd:#27394a;--in:#0f1b26}}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 "DM Sans",system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+main{max-width:760px;margin:0 auto;padding:20px 16px 80px}
+h1,h2{font-family:"Bricolage Grotesque","DM Sans",sans-serif;margin:0}
+h1{font-size:clamp(2rem,7vw,3.2rem);line-height:1.05;font-weight:800}
+h2{font-size:1.4rem;margin:36px 0 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+button,select,input{font:inherit;color:inherit}
+button{border:1px solid var(--bd);background:var(--card);border-radius:8px;padding:7px 12px;cursor:pointer}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:700}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--hi);outline-offset:1px}
+input,select{background:var(--in);border:1px solid var(--bd);border-radius:6px;padding:6px 8px;min-width:0;width:100%}
+.sub{color:var(--mu);margin:6px 0 0}
+.title-in{font:800 clamp(2rem,7vw,3.2rem)/1.05 "Bricolage Grotesque",sans-serif}
+.pass{background:var(--card);border:1px solid var(--bd);border-radius:14px;margin-bottom:12px;display:grid;grid-template-columns:1fr auto 1fr;gap:10px;padding:16px;position:relative}
+.pass .code{font:800 1.9rem "Bricolage Grotesque",sans-serif;line-height:1}
+.pass .mid{text-align:center;color:var(--mu);align-self:center}
+.pass .meta{grid-column:1/-1;border-top:2px dashed var(--bd);padding-top:10px;display:flex;gap:16px;flex-wrap:wrap;color:var(--mu);font-size:.92rem}
+.pass .meta b{color:var(--tx)}
+.edit .pass{grid-template-columns:1fr 1fr}.edit .pass .mid{display:none}
+.edit .pass .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.todo{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;margin-bottom:6px}
+.todo input[type=checkbox]{width:20px;height:20px;accent-color:var(--ac);flex:none}
+.todo.done span{text-decoration:line-through;color:var(--mu)}
+.day{margin-bottom:26px}
+.day h3{font:700 1.15rem "Bricolage Grotesque",sans-serif;margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--ac);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.item{display:grid;grid-template-columns:78px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd)}
+.time{font-weight:700;color:var(--ac)}
+.item .nm{font-weight:700}
+.item .nt{color:var(--mu);font-size:.93rem}
+.item a{color:inherit;text-decoration-color:var(--hi);text-underline-offset:3px;text-decoration-thickness:2px}
+.row{display:grid;grid-template-columns:90px 120px 1fr auto;gap:6px;margin-bottom:6px;align-items:center}
+.row.n{grid-column:1/-1}
+.x{padding:4px 9px;color:var(--mu)}
+.empty{color:var(--mu);padding:14px;border:1px dashed var(--bd);border-radius:10px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:10px;display:none;z-index:9}
+@media(max-width:560px){.row{grid-template-columns:80px 1fr auto}.row .tp{grid-column:1/3}.item{grid-template-columns:62px 1fr}}
+@media print{.bar,.x,button,.addb{display:none!important}body{background:#fff}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div class="toast" id="toast" role="status"></div>
+<script>
+/* ---- Data -------------------------------------------------------------
+   Edit in the page (use "Edit"), or change this default object.
+   "Share link" packs everything into the URL so a friend can open it. */
+var DEFAULT = {
+  title: "Weekend in Lisbon",
+  dates: "Nov 14 – 17",
+  flights: [
+    {air:"TAP Air Portugal", no:"TP 214", from:"CLT", to:"LIS", dep:"2026-11-14T18:45", arr:"2026-11-15T07:30", conf:"X7K9QP"}
+  ],
+  todos: [
+    {t:"Check passport expiry", d:false},
+    {t:"Book airport transfer", d:false},
+    {t:"Download offline maps", d:true}
+  ],
+  days: [
+    {date:"2026-11-15", items:[
+      {time:"10:00", type:"🏨", name:"Hotel check-in / drop bags", note:""},
+      {time:"13:00", type:"🍽️", name:"Time Out Market", note:"Try the pastel de nata"},
+      {time:"16:00", type:"📍", name:"Alfama neighbourhood", note:"Walk up to Miradouro das Portas do Sol"}
+    ]}
+  ]
+};
+var TYPES = ["🍽️","☕","📍","🏨","🚗","🎟️","🛍️"];
+var S, edit = false, view = false;
+
+function enc(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
+function dec(s){return JSON.parse(decodeURIComponent(escape(atob(s))))}
+function load(){
+  try{ if(location.hash.indexOf("#d=")===0){ view=true; return dec(location.hash.slice(3)); } }catch(e){}
+  try{ var r=localStorage.getItem("trip"); if(r) return JSON.parse(r); }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT));
+}
+function save(){ if(view) return; try{localStorage.setItem("trip",JSON.stringify(S))}catch(e){} }
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.style.display="block";setTimeout(function(){t.style.display="none"},2400)}
+
+function fdate(d){ if(!d) return ""; var x=new Date(d); return isNaN(x)?d:x.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}); }
+function fdt(d){ if(!d) return ""; var x=new Date(d); return isNaN(x)?d:x.toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}); }
+function ftime(t){ if(!t) return ""; var p=t.split(":"),h=+p[0]; return ((h%12)||12)+":"+p[1]+(h<12?" AM":" PM"); }
+function inp(p,v,ph,type){return '<input data-p="'+p+'" value="'+esc(v)+'" placeholder="'+ph+'" aria-label="'+ph+'"'+(type?' type="'+type+'"':'')+'>'}
+
+function render(){
+  var h = '<div class="'+(edit?'edit':'')+'">';
+  h += edit ? inp("title",S.title,"Trip title").replace('<input','<input class="title-in"') : '<h1>'+esc(S.title)+'</h1>';
+  h += edit ? '<div style="margin-top:8px">'+inp("dates",S.dates,"Dates, e.g. Nov 14 – 17")+'</div>' : '<p class="sub">'+esc(S.dates)+'</p>';
+  h += '<div class="bar">';
+  if(!view){
+    h += '<button class="'+(edit?'p':'')+'" data-a="toggle">'+(edit?'Done editing':'Edit')+'</button>';
+    h += '<button class="p" data-a="share">Copy share link</button>';
+    h += '<button data-a="reset">Reset</button>';
+  } else {
+    h += '<button data-a="mine">Make my own copy</button>';
+  }
+  h += '<button data-a="print">Print</button></div>';
+
+  // Flights
+  h += '<h2>Flights'+(edit?'<button class="addb" data-a="addflight">+ Add flight</button>':'')+'</h2>';
+  if(!S.flights.length) h += '<div class="empty">No flights yet.</div>';
+  S.flights.forEach(function(f,i){
+    var b="flights."+i+".";
+    if(edit){
+      h += '<div class="pass">'+inp(b+"air",f.air,"Airline")+inp(b+"no",f.no,"Flight no.")+inp(b+"from",f.from,"From (code)")+inp(b+"to",f.to,"To (code)")+
+        '<div class="meta"><label>Departs'+inp(b+"dep",f.dep,"","datetime-local")+'</label><label>Arrives'+inp(b+"arr",f.arr,"","datetime-local")+'</label>'+inp(b+"conf",f.conf,"Confirmation #")+'<button data-a="delflight" data-i="'+i+'">Remove</button></div></div>';
+    } else {
+      h += '<div class="pass"><div><div class="code">'+esc(f.from)+'</div><div>'+esc(fdt(f.dep))+'</div></div><div class="mid">✈<br>'+esc(f.no)+'</div><div style="text-align:right"><div class="code">'+esc(f.to)+'</div><div>'+esc(fdt(f.arr))+'</div></div>'+
+        '<div class="meta"><span>'+esc(f.air)+'</span>'+(f.conf?'<span>Confirmation <b>'+esc(f.conf)+'</b></span>':'')+'</div></div>';
+    }
+  });
+
+  // To-do
+  h += '<h2>Things to do'+(edit?'<button class="addb" data-a="addtodo">+ Add</button>':'')+'</h2>';
+  if(!S.todos.length) h += '<div class="empty">Nothing on the list.</div>';
+  S.todos.forEach(function(t,i){
+    h += '<div class="todo'+(t.d?' done':'')+'"><input type="checkbox" data-c="'+i+'"'+(t.d?' checked':'')+' aria-label="Done">'+
+      (edit?inp("todos."+i+".t",t.t,"To-do")+'<button class="x" data-a="deltodo" data-i="'+i+'" aria-label="Remove">✕</button>':'<span>'+esc(t.t)+'</span>')+'</div>';
+  });
+
+  // Itinerary
+  h += '<h2>Itinerary'+(edit?'<button class="addb" data-a="addday">+ Add day</button>':'')+'</h2>';
+  if(!S.days.length) h += '<div class="empty">Add a day to start planning.</div>';
+  S.days.forEach(function(d,di){
+    h += '<section class="day"><h3>'+(edit?inp("days."+di+".date",d.date,"","date"):esc(fdate(d.date)))+
+      (edit?'<span><button data-a="sort" data-i="'+di+'">Sort by time</button> <button data-a="delday" data-i="'+di+'">Remove day</button></span>':'')+'</h3>';
+    d.items.forEach(function(it,ii){
+      var b="days."+di+".items."+ii+".";
+      if(edit){
+        h += '<div class="row"><input type="time" data-p="'+b+'time" value="'+esc(it.time)+'" aria-label="Time">'+
+          '<select class="tp" data-p="'+b+'type" aria-label="Type">'+TYPES.map(function(t){return '<option'+(t===it.type?' selected':'')+'>'+t+'</option>'}).join("")+'</select>'+
+          inp(b+"name",it.name,"Place or restaurant")+'<button class="x" data-a="delitem" data-i="'+di+'" data-j="'+ii+'" aria-label="Remove">✕</button></div>'+
+          '<div style="margin-bottom:10px">'+inp(b+"note",it.note,"Note (optional)")+'</div>';
+      } else {
+        var link = it.name ? '<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(it.name)+'">'+esc(it.name)+'</a>' : "";
+        h += '<div class="item"><div class="time">'+esc(ftime(it.time))+'</div><div><div class="nm">'+esc(it.type)+' '+link+'</div>'+(it.note?'<div class="nt">'+esc(it.note)+'</div>':'')+'</div></div>';
+      }
+    });
+    if(edit) h += '<button class="addb" data-a="additem" data-i="'+di+'">+ Add stop</button>';
+    h += '</section>';
+  });
+  h += '</div>';
+  document.getElementById("app").innerHTML = h;
+  document.title = S.title || "My Trip";
+}
+
+function setPath(p,v){var k=p.split("."),o=S;for(var i=0;i<k.length-1;i++)o=o[k[i]];o[k[k.length-1]]=v}
+
+document.addEventListener("input",function(e){
+  var p=e.target.getAttribute("data-p"); if(p){setPath(p,e.target.value);save()}
+});
+document.addEventListener("change",function(e){
+  var c=e.target.getAttribute("data-c");
+  if(c!==null){S.todos[+c].d=e.target.checked;save();render()}
+});
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-a]"); if(!b) return;
+  var a=b.getAttribute("data-a"), i=+b.getAttribute("data-i"), j=+b.getAttribute("data-j");
+  if(a==="toggle") edit=!edit;
+  else if(a==="addflight") S.flights.push({air:"",no:"",from:"",to:"",dep:"",arr:"",conf:""});
+  else if(a==="delflight") S.flights.splice(i,1);
+  else if(a==="addtodo") S.todos.push({t:"",d:false});
+  else if(a==="deltodo") S.todos.splice(i,1);
+  else if(a==="addday") S.days.push({date:"",items:[]});
+  else if(a==="delday") S.days.splice(i,1);
+  else if(a==="additem") S.days[i].items.push({time:"",type:"🍽️",name:"",note:""});
+  else if(a==="delitem") S.days[i].items.splice(j,1);
+  else if(a==="sort") S.days[i].items.sort(function(x,y){return (x.time||"99").localeCompare(y.time||"99")});
+  else if(a==="print"){window.print();return}
+  else if(a==="reset"){ if(!confirm("Reset to the sample trip? This clears your changes.")) return; S=JSON.parse(JSON.stringify(DEFAULT)); }
+  else if(a==="mine"){ try{localStorage.setItem("trip",JSON.stringify(S))}catch(x){} location.hash=""; location.reload(); return; }
+  else if(a==="share"){
+    var url=location.href.split("#")[0]+"#d="+enc(S);
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(function(){toast("Share link copied")},function(){prompt("Copy this link:",url)})}
+    else prompt("Copy this link:",url);
+    return;
+  }
+  save(); render();
+});
+
+S = load();
+render();
+</script>
+</body>
+</html>
